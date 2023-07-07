@@ -138,6 +138,13 @@ let allSockets: WebSocket[] = []
 websocketServer.on("connection", (ws) => {
   let encryptionkey: $KeysAndUsername = { key: '', username: '' }
   let secretKey = generateRandomString()
+
+  console.log("Connection opened.")
+  ws.send(JSON.stringify({
+    "type": "connected_handshake",
+    "message": secretKey
+  }))
+  allSockets.push(ws)
   ws.on("open", () => {
     console.log("Connection opened.")
     ws.send(JSON.stringify({
