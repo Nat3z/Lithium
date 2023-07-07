@@ -118,7 +118,7 @@ app.get("/gethash", (req, res) => {
 
 let websocketServer = new WebSocket.Server({ server })
 
-type WebSocketMessageTypes = "key_exchange" | "connected_handshake" | "key_exchange_response"
+type WebSocketMessageTypes = "KEY_EXCHANGE" | "CONNECTED_HANDSHAKE" | "KEY_EXCHANGE_RESPONSE"
 
 interface WebSocketMessage {
   type: WebSocketMessageTypes,
@@ -145,12 +145,10 @@ websocketServer.on("connection", (ws) => {
     "message": secretKey
   }))
   allSockets.push(ws)
-
   ws.send(JSON.stringify({
     "type": "key_exchange_response",
     "message": keys
-  }))
-  
+  }))  
 
   ws.on("close", () => {
     console.log("Connection closed.")
@@ -163,8 +161,9 @@ websocketServer.on("connection", (ws) => {
   ws.on("message", (rawMessage) => {
     try {
       let message: WebSocketMessage = JSON.parse(rawMessage.toString())
-      if (message.type == "key_exchange") {
-        encryptionkey = KeysAndUsername.parse(message.message)
+      console.log("Received message from server: " + rawMessage.toString())
+      if (message.type == "KEY_EXCHANGE") {
+        encryptionkey = KeysAndUsername.parse(JSON.parse(message.message))
         keys.push(encryptionkey)
         allSockets.forEach((socket) => {
           socket.send(JSON.stringify({
@@ -176,6 +175,7 @@ websocketServer.on("connection", (ws) => {
       }
     } catch (error) {
       console.log("Message is not formatted correctly.")
+      console.log(error)
     }
   })
 })
