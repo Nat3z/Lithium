@@ -145,14 +145,12 @@ websocketServer.on("connection", (ws) => {
     "message": secretKey
   }))
   allSockets.push(ws)
-  ws.on("open", () => {
-    console.log("Connection opened.")
-    ws.send(JSON.stringify({
-      "type": "connected_handshake",
-      "message": secretKey
-    }))
-    allSockets.push(ws)
-  })
+
+  ws.send(JSON.stringify({
+    "type": "key_exchange_response",
+    "message": keys
+  }))
+  
 
   ws.on("close", () => {
     console.log("Connection closed.")
