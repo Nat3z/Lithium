@@ -141,12 +141,12 @@ websocketServer.on("connection", (ws) => {
 
   console.log("Connection opened.")
   ws.send(JSON.stringify({
-    "type": "connected_handshake",
+    "type": "CONNECTED_HANDSHAKE",
     "message": secretKey
   }))
   allSockets.push(ws)
   ws.send(JSON.stringify({
-    "type": "key_exchange_response",
+    "type": "KEY_EXCHANGE_RESPONSE",
     "message": keys
   }))  
 
@@ -167,7 +167,7 @@ websocketServer.on("connection", (ws) => {
         keys.push(encryptionkey)
         allSockets.forEach((socket) => {
           socket.send(JSON.stringify({
-            "type": "key_exchange_response",
+            "type": "KEY_EXCHANGE_RESPONSE",
             "message": keys
           }))
         })
