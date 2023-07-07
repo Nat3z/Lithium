@@ -3,6 +3,9 @@ import fileUpload from 'express-fileupload'
 import fs from 'fs'
 import cors from 'cors'
 import crypto from 'crypto'
+import http from 'http'
+import WebSocket from 'ws'
+import z from 'zod'
 
 export function calculateHash(file: string, type: string): string {
   const testfile = fs.readFileSync(file);
@@ -11,6 +14,8 @@ export function calculateHash(file: string, type: string): string {
 }
 
 let app = express()
+
+const server = http.createServer(app);
 
 app.use(fileUpload());
 app.use(cors({
@@ -111,7 +116,64 @@ app.get("/gethash", (req, res) => {
   })
 })
 
-app.listen(process.env.PORT || 8080, () => {
-  console.log("✨ \x1b[37mApp is ready!")
-  console.log("\x1b[44m LOCAL \x1b[0m http://localhost:8080/")
+let websocketServer = new WebSocket.Server({ server })
+
+type WebSocketMessageTypes = "key_exchange" | "connected_handshake" | "key_exchange_response"
+
+interface WebSocketMessage {
+  type: WebSocketMessageTypes,
+  message: string
+}
+
+const KeysAndUsername = z.object({
+  key: z.string(),
+  username: z.string()
 })
+
+type $KeysAndUsername = z.infer<typeof KeysAndUsername>
+
+let keys: $KeysAndUsername[] = []
+
+let allSockets: WebSocket[] = []
+websocketServer.on("connection", (ws) => {
+  let encryptionkey: $KeysAndUsername = { key: '', username: '' }
+  let secretKey = generateRandomString()
+  ws.on("open", () => {
+    console.log("Connection opened.")
+    ws.send(JSON.stringify({
+      "type": "connected_handshake",
+      "message": secretKey
+    }))
+    allSockets.push(ws)
+  })
+
+  ws.on("close", () => {
+    console.log("Connection closed.")
+    allSockets.splice(allSockets.indexOf(ws), 1)
+    if (keys.indexOf(encryptionkey) == -1) return
+    
+    keys.splice(keys.indexOf(encryptionkey), 1)
+  })
+
+  ws.on("message", (rawMessage) => {
+    try {
+      let message: WebSocketMessage = JSON.parse(rawMessage.toString())
+      if (message.type == "key_exchange") {
+        encryptionkey = KeysAndUsername.parse(message.message)
+        keys.push(encryptionkey)
+        allSockets.forEach((socket) => {
+          socket.send(JSON.stringify({
+            "type": "key_exchange_response",
+            "message": keys
+          }))
+        })
+        console.log("Key exchange successful.")
+      }
+    } catch (error) {
+      console.log("Message is not formatted correctly.")
+    }
+  })
+})
+server.listen(process.env.PORT || 8080, () => {
+  console.log(`Server started on port ${server.address()}`);
+});

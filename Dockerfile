@@ -4,4 +4,4 @@ COPY package*.json ./
 COPY tsconfig.json ./
 RUN npm ci --only=production
 COPY . .
-CMD [ "npm", "deploy" ]
+CMD [ "npm", "run", "deploy" ]

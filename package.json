@@ -22,9 +22,12 @@
   },
   "dependencies": {
     "@types/cors": "^2.8.13",
+    "@types/ws": "^8.5.5",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "express-fileupload": "^1.4.0"
+    "express-fileupload": "^1.4.0",
+    "ws": "^8.13.0",
+    "zod": "^3.21.4"
   }
 }
