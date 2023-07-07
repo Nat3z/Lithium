@@ -164,6 +164,12 @@ websocketServer.on("connection", (ws) => {
       console.log("Received message from server: " + rawMessage.toString())
       if (message.type == "KEY_EXCHANGE") {
         encryptionkey = KeysAndUsername.parse(JSON.parse(message.message))
+
+        // check if the username is already in the array
+        if (keys.find((key) => key.username == encryptionkey.username)) {
+          console.log("Username already exists.")
+          return
+        }
         keys.push(encryptionkey)
         allSockets.forEach((socket) => {
           socket.send(JSON.stringify({
